@@ -1,9 +1,8 @@
 // Copyright 2022 by Tanner Swett and Medallion Instrumentation Systems.
 //
 // This file is part of Poutine. Poutine is free software; you can redistribute
-// it and/or modify it under the terms of the GNU General Public License as
-// published by the Free Software Foundation; either version 2 of the License,
-// or (at your option) any later version.
+// it and/or modify it under the terms of version 3 of the GNU General Public
+// License as published by the Free Software Foundation.
 //
 // Poutine is distributed in the hope that it will be useful, but WITHOUT ANY
 // WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
@@ -13,10 +12,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define PANIC(message, ...) do { \
-    fprintf(stderr, "PANIC at %s line %d: " message, __FILE__, __LINE__, __VA_ARGS__); \
-    exit(-1); \
-} while (0)
+#include "heap.h"
 
 // Command parsing and processing:
 
@@ -35,16 +31,6 @@ void cmd_setfield(int field, int index, int value);
 #define COMMAND_GETCDR 1
 #define COMMAND_SETCAR 2
 #define COMMAND_SETCDR 3
-
-// Interacting with the data:
-
-// Get the value of a field in a cell
-int getfield(int field, int index);
-// Set the value of a field in a cell
-void setfield(int field, int index, int value);
-#define HEAP_SIZE (1024*1024)
-#define FIELD_CAR 0
-#define FIELD_CDR 1
 
 // Command parsing and processing:
 
@@ -78,7 +64,7 @@ void process_command(void) {
     else if (strcmp(command_name, "setcdr") == 0)
         command_num = COMMAND_SETCDR;
     else
-        fprintf(stderr, "Unrecognized command: %s\n", command_name);
+        goto unknown_command;
 
     switch (command_num) {
         case COMMAND_GETCAR:
@@ -134,6 +120,10 @@ void process_command(void) {
 
     return;
 
+    unknown_command:
+    fprintf(stderr, "Unrecognized command: %s\n", command_name);
+    return;
+
     too_few_arguments:
     fprintf(stderr, "Too few arguments to %s\n", command_name);
     return;
@@ -181,47 +171,4 @@ void cmd_setfield(int field, int index, int value) {
     }
 
     setfield(field, index, value);
-}
-
-// Interacting with the data
-
-typedef struct cons_cell {
-    int car;
-    int cdr;
-    int tag;
-    int refCount;
-} cons_cell;
-
-cons_cell heap[HEAP_SIZE];
-
-int getfield(int field, int index) {
-    if (index < 0 || index >= HEAP_SIZE) {
-        PANIC("Index out of range: %d\n", index);
-    }
-
-    switch (field) {
-        case FIELD_CAR:
-            return heap[index].car;
-        case FIELD_CDR:
-            return heap[index].cdr;
-        default:
-            PANIC("Unrecognized field number: %d\n", index);
-    }
-}
-
-void setfield(int field, int index, int value) {
-    if (index < 0 || index >= HEAP_SIZE) {
-        PANIC("Index out of range: %d\n", index);
-    }
-
-    switch (field) {
-        case FIELD_CAR:
-            heap[index].car = value;
-            return;
-        case FIELD_CDR:
-            heap[index].cdr = value;
-            return;
-        default:
-            PANIC("Unrecognized field number: %d\n", index);
-    }
 }
