@@ -1,4 +1,4 @@
-// Copyright 2022 by Tanner Swett and Medallion Instrumentation Systems.
+// Copyright 2023 by Tanner Swett and Medallion Instrumentation Systems.
 //
 // This file is part of Poutine. Poutine is free software; you can redistribute
 // it and/or modify it under the terms of version 3 of the GNU General Public
@@ -17,7 +17,7 @@
 #include <stdlib.h>
 
 #define PANIC(message, ...) do { \
-    fprintf(stderr, "PANIC at %s line %d: " message, __FILE__, __LINE__, __VA_ARGS__); \
+    fprintf(stderr, "PANIC at %s line %d: " message "\n", __FILE__, __LINE__, ##__VA_ARGS__); \
     exit(-1); \
 } while (0)
 

@@ -1,4 +1,4 @@
-// Copyright 2022 by Tanner Swett and Medallion Instrumentation Systems.
+// Copyright 2023 by Tanner Swett and Medallion Instrumentation Systems.
 //
 // This file is part of Poutine. Poutine is free software; you can redistribute
 // it and/or modify it under the terms of version 3 of the GNU General Public
@@ -8,10 +8,10 @@
 // WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
 // A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 
+// heap.h: The in-memory database ("heap") and functions for interacting with it
+
 #include "heap.h"
 #include "panic.h"
-
-// heap.h: The in-memory database ("heap") and functions for interacting with it
 
 typedef struct cons_cell {
     int car;
@@ -24,7 +24,7 @@ cons_cell heap[HEAP_SIZE];
 
 int getfield(int field, int index) {
     if (index < 0 || index >= HEAP_SIZE) {
-        PANIC("Index out of range: %d\n", index);
+        PANIC("Index out of range: %d", index);
     }
 
     switch (field) {
@@ -33,13 +33,13 @@ int getfield(int field, int index) {
         case FIELD_CDR:
             return heap[index].cdr;
         default:
-            PANIC("Unrecognized field number: %d\n", index);
+            PANIC("Unrecognized field number: %d", index);
     }
 }
 
 void setfield(int field, int index, int value) {
     if (index < 0 || index >= HEAP_SIZE) {
-        PANIC("Index out of range: %d\n", index);
+        PANIC("Index out of range: %d", index);
     }
 
     switch (field) {
@@ -50,6 +50,6 @@ void setfield(int field, int index, int value) {
             heap[index].cdr = value;
             return;
         default:
-            PANIC("Unrecognized field number: %d\n", index);
+            PANIC("Unrecognized field number: %d", index);
     }
 }
