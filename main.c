@@ -13,6 +13,7 @@
 #include <string.h>
 
 #include "heap.h"
+#include "panic.h"
 
 
 
@@ -24,29 +25,37 @@ void process_command(void);
 // Individual commands:
 
 // Get and print the value of a field in a cell
-void cmd_getfield(int field, char *command_name);
+void cmd_getfield(int field, const char *command_name);
 // Set the value of a field in a cell
-void cmd_setfield(int field, char *command_name);
+void cmd_setfield(int field, const char *command_name);
+// Get and print the tag of a cell
+void cmd_gettag(void);
+// Set the tag of a cell
+void cmd_settag(void);
 
 // Error messages:
 
 // Print "Unrecognized command: %s"
-void unknown_command(char *command_name);
+void unknown_command(const char *command_name);
 // Print "Too few arguments to %s"
-void too_few_arguments(char *command_name);
+void too_few_arguments(const char *command_name);
 // Print "Too many arguments to %s"
-void too_many_arguments(char *command_name);
+void too_many_arguments(const char *command_name);
 // Print "Invalid number: %s"
-void invalid_number(char *word);
+void invalid_number(const char *word);
 // Print "Index out of range: %d"
 void index_out_of_range(int index);
+// Print "Unrecognized tag name: %s"
+void unknown_tagname(const char *word);
 
 // Argument parsing using strtok:
 
 // Try to get an int argument; return 0 on failure
-int get_int_argument_strtok(char *command_name, int *result);
+int get_int_argument_strtok(const char *command_name, int *result);
+// Try to get a tag name argument; return 0 on failure
+int get_tagname_argument_strtok(const char *command_name, int *result);
 // Assert that there are no more arguments; return 0 if there is one
-int no_more_arguments_strtok(char *command_name);
+int no_more_arguments_strtok(const char *command_name);
 
 
 
@@ -56,6 +65,8 @@ int main(int argc, char **argv) {
     while (!feof(stdin)) {
         process_command();
     }
+
+    fprintf(stderr, "\n");
 }
 
 void process_command(void) {
@@ -65,7 +76,7 @@ void process_command(void) {
     if (!fgets(command, sizeof(command), stdin))
         return;
 
-    char *command_name = strtok(command, " \n");
+    const char *command_name = strtok(command, " \n");
 
     if (!command_name)
         return;
@@ -74,10 +85,14 @@ void process_command(void) {
         cmd_getfield(FIELD_CAR, command_name);
     else if (strcmp(command_name, "getcdr") == 0)
         cmd_getfield(FIELD_CDR, command_name);
+    else if (strcmp(command_name, "gettag") == 0)
+        cmd_gettag();
     else if (strcmp(command_name, "setcar") == 0)
         cmd_setfield(FIELD_CAR, command_name);
     else if (strcmp(command_name, "setcdr") == 0)
         cmd_setfield(FIELD_CDR, command_name);
+    else if (strcmp(command_name, "settag") == 0)
+        cmd_settag();
     else
         unknown_command(command_name);
 
@@ -88,7 +103,7 @@ void process_command(void) {
 
 // Individual commands:
 
-void cmd_getfield(int field, char *command_name) {
+void cmd_getfield(int field, const char *command_name) {
     int index;
 
     if (!get_int_argument_strtok(command_name, &index)) return;
@@ -104,7 +119,7 @@ void cmd_getfield(int field, char *command_name) {
     printf("%d\n", result);
 }
 
-void cmd_setfield(int field, char *command_name) {
+void cmd_setfield(int field, const char *command_name) {
     int index, value;
 
     if (!get_int_argument_strtok(command_name, &index)) return;
@@ -119,23 +134,68 @@ void cmd_setfield(int field, char *command_name) {
     setfield(field, index, value);
 }
 
+void cmd_gettag() {
+    int index;
+    const char *command_name = "gettag";
+
+    if (!get_int_argument_strtok(command_name, &index)) return;
+    if (!no_more_arguments_strtok(command_name)) return;
+
+    if (index < 0 || index >= HEAP_SIZE) {
+        index_out_of_range(index);
+        return;
+    }
+
+    int result = getfield(FIELD_TAG, index);
+
+    switch (result) {
+        case TAG_UNINIT:
+            printf("uninit\n");
+            return;
+        case TAG_ATOM:
+            printf("atom\n");
+            return;
+        case TAG_CONS:
+            printf("cons\n");
+            return;
+        default:
+            PANIC("Unrecognized tag number: %d", result);
+    }
+}
+
+void cmd_settag() {
+    int index, value;
+    const char *command_name = "settag";
+
+    if (!get_int_argument_strtok(command_name, &index)) return;
+    if (!get_tagname_argument_strtok(command_name, &value)) return;
+    if (!no_more_arguments_strtok(command_name)) return;
+
+    if (index < 0 || index >= HEAP_SIZE) {
+        index_out_of_range(index);
+        return;
+    }
+
+    setfield(FIELD_TAG, index, value);
+}
+
 
 
 // Error messages:
 
-void unknown_command(char *command_name) {
+void unknown_command(const char *command_name) {
     fprintf(stderr, "Unrecognized command: %s\n", command_name);
 }
 
-void too_few_arguments(char *command_name) {
+void too_few_arguments(const char *command_name) {
     fprintf(stderr, "Too few arguments to %s\n", command_name);
 }
 
-void too_many_arguments(char *command_name) {
+void too_many_arguments(const char *command_name) {
     fprintf(stderr, "Too many arguments to %s\n", command_name);
 }
 
-void invalid_number(char *word) {
+void invalid_number(const char *word) {
     fprintf(stderr, "Invalid number: %s\n", word);
 }
 
@@ -143,12 +203,16 @@ void index_out_of_range(int index) {
     fprintf(stderr, "Index out of range: %d\n", index);
 }
 
+void unknown_tagname(const char *word) {
+    fprintf(stderr,  "Unrecognized tag name: %s\n", word);
+}
+
 
 
 // Argument parsing using strtok:
 
-int get_int_argument_strtok(char *command_name, int *result) {
-    char *word = strtok(NULL, " \n");
+int get_int_argument_strtok(const char *command_name, int *result) {
+    const char *word = strtok(NULL, " \n");
 
     if (!word) {
         too_few_arguments(command_name);
@@ -167,8 +231,31 @@ int get_int_argument_strtok(char *command_name, int *result) {
     }
 }
 
-int no_more_arguments_strtok(char *command_name) {
-    char *word = strtok(NULL, " \n");
+int get_tagname_argument_strtok(const char *command_name, int *result) {
+    const char *word = strtok(NULL, " \n");
+
+    if (!word) {
+        too_few_arguments(command_name);
+        return 0;
+    }
+
+    if (strcmp(word, "uninit") == 0) {
+        *result = TAG_UNINIT;
+        return 1;
+    } else if (strcmp(word, "atom") == 0) {
+        *result = TAG_ATOM;
+        return 1;
+    } else if (strcmp(word, "cons") == 0) {
+        *result = TAG_CONS;
+        return 1;
+    } else {
+        unknown_tagname(word);
+        return 0;
+    }
+}
+
+int no_more_arguments_strtok(const char *command_name) {
+    const char *word = strtok(NULL, " \n");
 
     if (word) {
         too_many_arguments(command_name);

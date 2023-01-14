@@ -38,13 +38,19 @@ int main(int argc, char **argv) {
 void test_heap() {
     setfield(FIELD_CAR, 0, 31);
     setfield(FIELD_CDR, 0, 41);
+    setfield(FIELD_TAG, 0, TAG_ATOM);
     setfield(FIELD_CAR, 1, 59);
     setfield(FIELD_CDR, 1, 26);
+    setfield(FIELD_TAG, 1, TAG_ATOM);
     setfield(FIELD_CAR, 0, 53);
     setfield(FIELD_CDR, 0, 58);
+    setfield(FIELD_TAG, 0, TAG_CONS);
 
     TEST_HEAP_EXPECT_FIELD(FIELD_CAR, 0, 53);
     TEST_HEAP_EXPECT_FIELD(FIELD_CDR, 0, 58);
+    TEST_HEAP_EXPECT_FIELD(FIELD_TAG, 0, TAG_CONS);
     TEST_HEAP_EXPECT_FIELD(FIELD_CAR, 1, 59);
     TEST_HEAP_EXPECT_FIELD(FIELD_CDR, 1, 26);
+    TEST_HEAP_EXPECT_FIELD(FIELD_TAG, 1, TAG_ATOM);
+    TEST_HEAP_EXPECT_FIELD(FIELD_TAG, 2, TAG_UNINIT);
 }

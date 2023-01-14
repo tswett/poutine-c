@@ -18,7 +18,13 @@ int getfield(int field, int index);
 // Set the value of a field in a cell
 void setfield(int field, int index, int value);
 #define HEAP_SIZE (1024*1024)
+
 #define FIELD_CAR 0
 #define FIELD_CDR 1
+#define FIELD_TAG 2
+
+#define TAG_UNINIT 0
+#define TAG_ATOM 1
+#define TAG_CONS 2
 
 #endif

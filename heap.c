@@ -32,8 +32,10 @@ int getfield(int field, int index) {
             return heap[index].car;
         case FIELD_CDR:
             return heap[index].cdr;
+        case FIELD_TAG:
+            return heap[index].tag;
         default:
-            PANIC("Unrecognized field number: %d", index);
+            PANIC("Unrecognized field number: %d", field);
     }
 }
 
@@ -49,7 +51,10 @@ void setfield(int field, int index, int value) {
         case FIELD_CDR:
             heap[index].cdr = value;
             return;
+        case FIELD_TAG:
+            heap[index].tag = value;
+            return;
         default:
-            PANIC("Unrecognized field number: %d", index);
+            PANIC("Unrecognized field number: %d", field);
     }
 }
