@@ -28,10 +28,16 @@ void process_command(void);
 void cmd_getfield(int field, const char *command_name);
 // Set the value of a field in a cell
 void cmd_setfield(int field, const char *command_name);
+
 // Get and print the tag of a cell
 void cmd_gettag(void);
 // Set the tag of a cell
 void cmd_settag(void);
+
+// Get and print the text of an atom
+void cmd_getatom(void);
+// Set the text of an atom
+void cmd_setatom(void);
 
 // Error messages:
 
@@ -47,11 +53,17 @@ void invalid_number(const char *word);
 void index_out_of_range(int index);
 // Print "Unrecognized tag name: %s"
 void unknown_tagname(const char *word);
+// Print "The cell at index %d is not a valid atom"
+void not_an_atom(int index);
 
 // Argument parsing using strtok:
 
 // Try to get an int argument; return 0 on failure
 int get_int_argument_strtok(const char *command_name, int *result);
+// Try to get a word argument; return 0 on failure
+//
+// The result string remains valid for as long as the command string is valid.
+int get_word_argument_strtok(const char *command_name, const char **result);
 // Try to get a tag name argument; return 0 on failure
 int get_tagname_argument_strtok(const char *command_name, int *result);
 // Assert that there are no more arguments; return 0 if there is one
@@ -87,12 +99,16 @@ void process_command(void) {
         cmd_getfield(FIELD_CDR, command_name);
     else if (strcmp(command_name, "gettag") == 0)
         cmd_gettag();
+    else if (strcmp(command_name, "getatom") == 0)
+        cmd_getatom();
     else if (strcmp(command_name, "setcar") == 0)
         cmd_setfield(FIELD_CAR, command_name);
     else if (strcmp(command_name, "setcdr") == 0)
         cmd_setfield(FIELD_CDR, command_name);
     else if (strcmp(command_name, "settag") == 0)
         cmd_settag();
+    else if (strcmp(command_name, "setatom") == 0)
+        cmd_setatom();
     else
         unknown_command(command_name);
 
@@ -179,6 +195,45 @@ void cmd_settag() {
     setfield(FIELD_TAG, index, value);
 }
 
+void cmd_getatom() {
+    int index;
+    const char *command_name = "getatom";
+
+    if (!get_int_argument_strtok(command_name, &index)) return;
+    if (!no_more_arguments_strtok(command_name)) return;
+
+    if (index < 0 || index >= HEAP_SIZE) {
+        index_out_of_range(index);
+        return;
+    }
+
+    if (!isatom(index)) {
+        not_an_atom(index);
+        return;
+    }
+
+    const char *text = getatom(index);
+
+    printf("%s\n", text);
+}
+
+void cmd_setatom() {
+    int index;
+    const char *text;
+    const char *command_name = "setatom";
+
+    if (!get_int_argument_strtok(command_name, &index)) return;
+    if (!get_word_argument_strtok(command_name, &text)) return;
+    if (!no_more_arguments_strtok(command_name)) return;
+
+    if (index < 0 || index >= HEAP_SIZE) {
+        index_out_of_range(index);
+        return;
+    }
+
+    setatom(index, text);
+}
+
 
 
 // Error messages:
@@ -207,6 +262,10 @@ void unknown_tagname(const char *word) {
     fprintf(stderr,  "Unrecognized tag name: %s\n", word);
 }
 
+void not_an_atom(int index) {
+    fprintf(stderr, "The cell at index %d is not a valid atom\n", index);
+}
+
 
 
 // Argument parsing using strtok:
@@ -229,6 +288,18 @@ int get_int_argument_strtok(const char *command_name, int *result) {
         *result = strtoul_result;
         return 1;
     }
+}
+
+int get_word_argument_strtok(const char *command_name, const char **result) {
+    const char *word = strtok(NULL, " \n");
+
+    if (!word) {
+        too_few_arguments(command_name);
+        return 0;
+    }
+
+    *result = word;
+    return 1;
 }
 
 int get_tagname_argument_strtok(const char *command_name, int *result) {

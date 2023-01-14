@@ -11,6 +11,7 @@
 // tests.c: Some automated tests
 
 #include <stdio.h>
+#include <string.h>
 
 #include "heap.h"
 #include "panic.h"
@@ -19,11 +20,19 @@
 
 // Try out the heap functions.
 void test_heap(void);
+// Try out the functions that deal with atoms.
+void test_atoms(void);
 
 
+
+#define RUN_TEST(test, ...) do { \
+    printf("Running %s...\n", #test); \
+    test(__VA_ARGS__); \
+} while (0)
 
 int main(int argc, char **argv) {
-    test_heap();
+    RUN_TEST(test_heap);
+    RUN_TEST(test_atoms);
     printf("Everything looks good.\n");
 }
 
@@ -53,4 +62,21 @@ void test_heap() {
     TEST_HEAP_EXPECT_FIELD(FIELD_CDR, 1, 26);
     TEST_HEAP_EXPECT_FIELD(FIELD_TAG, 1, TAG_ATOM);
     TEST_HEAP_EXPECT_FIELD(FIELD_TAG, 2, TAG_UNINIT);
+}
+
+void test_atoms() {
+    setatom(0, "nil");
+    setatom(1, "ha");
+
+    TEST_HEAP_EXPECT_FIELD(FIELD_TAG, 0, TAG_ATOM);
+    const char *atom = getatom(0);
+
+    if (strcmp(atom, "nil") != 0)
+        PANIC("Unexpected result from getatom(0): expected \"nil\", got \"%s\"", atom);
+
+    TEST_HEAP_EXPECT_FIELD(FIELD_TAG, 1, TAG_ATOM);
+    atom = getatom(1);
+
+    if (strcmp(atom, "ha") != 0)
+        PANIC("Unexpected result from getatom(1): expected \"ha\", got \"%s\"", atom);
 }
