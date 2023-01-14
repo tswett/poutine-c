@@ -20,8 +20,6 @@
 
 // Read a command from the user and run it
 void process_command(void);
-// Try to parse an int from a string; return 0 on failure
-int try_parse_int(char *input, int *result);
 
 // Individual commands:
 
@@ -90,7 +88,6 @@ void process_command(void) {
 
 // Individual commands:
 
-// command_name: read-only pointer to a string
 void cmd_getfield(int field, char *command_name) {
     int index;
 
@@ -107,7 +104,6 @@ void cmd_getfield(int field, char *command_name) {
     printf("%d\n", result);
 }
 
-// command_name: read-only pointer to a string
 void cmd_setfield(int field, char *command_name) {
     int index, value;
 
@@ -127,22 +123,18 @@ void cmd_setfield(int field, char *command_name) {
 
 // Error messages:
 
-// command_name: read-only pointer to a string
 void unknown_command(char *command_name) {
     fprintf(stderr, "Unrecognized command: %s\n", command_name);
 }
 
-// command_name: read-only pointer to a string
 void too_few_arguments(char *command_name) {
     fprintf(stderr, "Too few arguments to %s\n", command_name);
 }
 
-// command_name: read-only pointer to a string
 void too_many_arguments(char *command_name) {
     fprintf(stderr, "Too many arguments to %s\n", command_name);
 }
 
-// word: read-only pointer to a string
 void invalid_number(char *word) {
     fprintf(stderr, "Invalid number: %s\n", word);
 }
@@ -155,8 +147,6 @@ void index_out_of_range(int index) {
 
 // Argument parsing using strtok:
 
-// command_name: read-only pointer to a string
-// result: output pointer to an int
 int get_int_argument_strtok(char *command_name, int *result) {
     char *word = strtok(NULL, " \n");
 
@@ -177,7 +167,6 @@ int get_int_argument_strtok(char *command_name, int *result) {
     }
 }
 
-// command_name: read-only pointer to a string
 int no_more_arguments_strtok(char *command_name) {
     char *word = strtok(NULL, " \n");
 
