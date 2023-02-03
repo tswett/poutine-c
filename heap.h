@@ -13,25 +13,34 @@
 #ifndef HEAP_H
 #define HEAP_H
 
+typedef struct heap *heap_p;
+
+// Allocate a heap with the given number of cons cells and atom buffer
+// characters
+//
+// Use free_heap() to free the heap. This function panics if it fails to
+// allocate enough memory.
+heap_p malloc_heap(size_t cell_count, size_t atom_buf_size);
+
+// Free a heap allocated with malloc_heap().
+void free_heap(heap_p heap);
+
 // Get the value of a field in a cell
-int getfield(int field, int index);
+int getfield(heap_p heap, int field, int index);
 // Set the value of a field in a cell
-void setfield(int field, int index, int value);
+void setfield(heap_p heap, int field, int index, int value);
 
 // Return 1 if this cell is a valid atom, 0 otherwise
 //
 // A cell is a valid atom if its tag is TAG_ATOM and its car is a valid index
 // into the atom text buffer.
-int isatom(int index);
+int isatom(heap_p heap, int index);
 // Get the text of an atom cell; return 0 if it isn't an atom
 //
-// The result pointer remains valid for the entire time this program is running.
-const char *getatom(int index);
+// The result pointer remains valid until the heap is freed.
+const char *getatom(heap_p heap, int index);
 // Make a cell into an atom and set its text
-void setatom(int index, const char *text);
-
-#define HEAP_SIZE (1024*1024)
-#define ATOM_TEXT_SIZE (1024*8)
+void setatom(heap_p heap, int index, const char *text);
 
 #define FIELD_CAR 0
 #define FIELD_CDR 1

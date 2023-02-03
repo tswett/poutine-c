@@ -71,9 +71,18 @@ int no_more_arguments_strtok(const char *command_name);
 
 
 
+#define HEAP_SIZE (1024*1024)
+#define ATOM_TEXT_SIZE (1024*8)
+
+heap_p heap;
+
+
+
 // Command parsing and processing:
 
 int main(int argc, char **argv) {
+    heap = malloc_heap(HEAP_SIZE, ATOM_TEXT_SIZE);
+
     while (!feof(stdin)) {
         process_command();
     }
@@ -130,7 +139,7 @@ void cmd_getfield(int field, const char *command_name) {
         return;
     }
 
-    int result = getfield(field, index);
+    int result = getfield(heap, field, index);
 
     printf("%d\n", result);
 }
@@ -147,7 +156,7 @@ void cmd_setfield(int field, const char *command_name) {
         return;
     }
 
-    setfield(field, index, value);
+    setfield(heap, field, index, value);
 }
 
 void cmd_gettag() {
@@ -162,7 +171,7 @@ void cmd_gettag() {
         return;
     }
 
-    int result = getfield(FIELD_TAG, index);
+    int result = getfield(heap, FIELD_TAG, index);
 
     switch (result) {
         case TAG_UNINIT:
@@ -192,7 +201,7 @@ void cmd_settag() {
         return;
     }
 
-    setfield(FIELD_TAG, index, value);
+    setfield(heap, FIELD_TAG, index, value);
 }
 
 void cmd_getatom() {
@@ -207,12 +216,12 @@ void cmd_getatom() {
         return;
     }
 
-    if (!isatom(index)) {
+    if (!isatom(heap, index)) {
         not_an_atom(index);
         return;
     }
 
-    const char *text = getatom(index);
+    const char *text = getatom(heap, index);
 
     printf("%s\n", text);
 }
@@ -231,7 +240,7 @@ void cmd_setatom() {
         return;
     }
 
-    setatom(index, text);
+    setatom(heap, index, text);
 }
 
 

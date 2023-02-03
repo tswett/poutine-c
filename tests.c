@@ -37,7 +37,7 @@ int main(int argc, char **argv) {
 }
 
 #define TEST_HEAP_EXPECT_FIELD(field, index, expected) do { \
-    int actual = getfield(field, index); \
+    int actual = getfield(heap, field, index); \
     if (actual != expected) { \
         PANIC("Unexpected result from getfield(%s, %d): expected %d, got %d", \
             #field, index, expected, actual); \
@@ -45,15 +45,17 @@ int main(int argc, char **argv) {
 } while (0)
 
 void test_heap() {
-    setfield(FIELD_CAR, 0, 31);
-    setfield(FIELD_CDR, 0, 41);
-    setfield(FIELD_TAG, 0, TAG_ATOM);
-    setfield(FIELD_CAR, 1, 59);
-    setfield(FIELD_CDR, 1, 26);
-    setfield(FIELD_TAG, 1, TAG_ATOM);
-    setfield(FIELD_CAR, 0, 53);
-    setfield(FIELD_CDR, 0, 58);
-    setfield(FIELD_TAG, 0, TAG_CONS);
+    heap_p heap = malloc_heap(3, 1);
+
+    setfield(heap, FIELD_CAR, 0, 31);
+    setfield(heap, FIELD_CDR, 0, 41);
+    setfield(heap, FIELD_TAG, 0, TAG_ATOM);
+    setfield(heap, FIELD_CAR, 1, 59);
+    setfield(heap, FIELD_CDR, 1, 26);
+    setfield(heap, FIELD_TAG, 1, TAG_ATOM);
+    setfield(heap, FIELD_CAR, 0, 53);
+    setfield(heap, FIELD_CDR, 0, 58);
+    setfield(heap, FIELD_TAG, 0, TAG_CONS);
 
     TEST_HEAP_EXPECT_FIELD(FIELD_CAR, 0, 53);
     TEST_HEAP_EXPECT_FIELD(FIELD_CDR, 0, 58);
@@ -62,21 +64,27 @@ void test_heap() {
     TEST_HEAP_EXPECT_FIELD(FIELD_CDR, 1, 26);
     TEST_HEAP_EXPECT_FIELD(FIELD_TAG, 1, TAG_ATOM);
     TEST_HEAP_EXPECT_FIELD(FIELD_TAG, 2, TAG_UNINIT);
+
+    free_heap(heap);
 }
 
 void test_atoms() {
-    setatom(0, "nil");
-    setatom(1, "ha");
+    heap_p heap = malloc_heap(2, 7);
+
+    setatom(heap, 0, "nil");
+    setatom(heap, 1, "ha");
 
     TEST_HEAP_EXPECT_FIELD(FIELD_TAG, 0, TAG_ATOM);
-    const char *atom = getatom(0);
+    const char *atom = getatom(heap, 0);
 
     if (strcmp(atom, "nil") != 0)
         PANIC("Unexpected result from getatom(0): expected \"nil\", got \"%s\"", atom);
 
     TEST_HEAP_EXPECT_FIELD(FIELD_TAG, 1, TAG_ATOM);
-    atom = getatom(1);
+    atom = getatom(heap, 1);
 
     if (strcmp(atom, "ha") != 0)
         PANIC("Unexpected result from getatom(1): expected \"ha\", got \"%s\"", atom);
+
+    free_heap(heap);
 }

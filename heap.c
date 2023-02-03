@@ -16,7 +16,7 @@
 #include "panic.h"
 
 // Try to find an atom in the buffer; return 0 if it isn't there
-int try_find_atom(const char *text, char **result);
+int try_find_atom(heap_p heap, const char *text, char **result);
 
 typedef struct cons_cell {
     int car;
@@ -25,111 +25,141 @@ typedef struct cons_cell {
     int refCount;
 } cons_cell;
 
-cons_cell heap[HEAP_SIZE];
+typedef struct heap {
+    cons_cell *cells;
+    size_t cell_count;
+    char *atom_text_buf;
+    char *atom_text_next;
+    char *atom_text_end;
+    size_t atom_buf_size;
+} heap;
 
-char atom_text_buf[ATOM_TEXT_SIZE];
-char *atom_text_next = atom_text_buf;
-char *const atom_text_end = atom_text_buf + ATOM_TEXT_SIZE;
+heap_p malloc_heap(size_t cell_count, size_t atom_buf_size) {
+    heap_p new_heap = calloc(1, sizeof(heap));
+    if (!new_heap)
+        PANIC("Failed to allocate enough memory for the heap");
 
-int getfield(int field, int index) {
-    if (index < 0 || index >= HEAP_SIZE) {
+    new_heap->cells = calloc(cell_count, sizeof(cons_cell));
+    if (!new_heap->cells)
+        PANIC("Failed to allocate enough memory for the heap");
+    new_heap->cell_count = cell_count;
+
+    new_heap->atom_text_buf = calloc(atom_buf_size, sizeof(char));
+    if (!new_heap->atom_text_buf)
+        PANIC("Failed to allocate enough memory for the heap");
+    new_heap->atom_text_next = new_heap->atom_text_buf;
+    new_heap->atom_buf_size = atom_buf_size;
+
+    return new_heap;
+}
+
+void free_heap(heap_p heap) {
+    free(heap->atom_text_buf);
+    free(heap->cells);
+    free(heap);
+}
+
+int getfield(heap_p heap, int field, int index) {
+    if (index < 0 || index >= heap->cell_count) {
         PANIC("Index out of range: %d", index);
     }
 
     switch (field) {
         case FIELD_CAR:
-            return heap[index].car;
+            return heap->cells[index].car;
         case FIELD_CDR:
-            return heap[index].cdr;
+            return heap->cells[index].cdr;
         case FIELD_TAG:
-            return heap[index].tag;
+            return heap->cells[index].tag;
         default:
             PANIC("Unrecognized field number: %d", field);
     }
 }
 
-void setfield(int field, int index, int value) {
-    if (index < 0 || index >= HEAP_SIZE) {
+void setfield(heap_p heap, int field, int index, int value) {
+    if (index < 0 || index >= heap->cell_count) {
         PANIC("Index out of range: %d", index);
     }
 
     switch (field) {
         case FIELD_CAR:
-            heap[index].car = value;
+            heap->cells[index].car = value;
             return;
         case FIELD_CDR:
-            heap[index].cdr = value;
+            heap->cells[index].cdr = value;
             return;
         case FIELD_TAG:
-            heap[index].tag = value;
+            heap->cells[index].tag = value;
             return;
         default:
             PANIC("Unrecognized field number: %d", field);
     }
 }
 
-int isatom(int index) {
-    if (index < 0 || index >= HEAP_SIZE)
+int isatom(heap_p heap, int index) {
+    if (index < 0 || index >= heap->cell_count)
         PANIC("Index out of range: %d", index);
 
-    if (heap[index].tag != TAG_ATOM)
+    if (heap->cells[index].tag != TAG_ATOM)
         return 0;
 
-    if (index < 0 || index >= ATOM_TEXT_SIZE)
+    if (index < 0 || index >= heap->atom_buf_size)
         return 0;
 
-    if (atom_text_buf[heap[index].car] == 0)
+    if (heap->atom_text_buf[heap->cells[index].car] == 0)
         return 0;
 
     return 1;
 }
 
-const char *getatom(int index) {
-    if (index < 0 || index >= HEAP_SIZE)
+const char *getatom(heap_p heap, int index) {
+    if (index < 0 || index >= heap->cell_count)
         PANIC("Index out of range: %d", index);
 
-    if (heap[index].tag != TAG_ATOM)
+    if (heap->cells[index].tag != TAG_ATOM)
         PANIC("Cell %d is not an atom", index);
 
-    if (index < 0 || index >= ATOM_TEXT_SIZE)
+    if (index < 0 || index >= heap->atom_buf_size)
         PANIC("Atom text index out of range: %d", index);
 
-    int buf_index = heap[index].car;
+    int buf_index = heap->cells[index].car;
 
-    if (atom_text_buf[buf_index] == 0)
+    if (heap->atom_text_buf[buf_index] == 0)
         PANIC("Atom text index points at a null byte: %d", index);
 
-    return &atom_text_buf[buf_index];
+    return &(heap->atom_text_buf[buf_index]);
 }
 
-void setatom(int index, const char *text) {
-    if (index < 0 || index >= HEAP_SIZE)
+void setatom(heap_p heap, int index, const char *text) {
+    if (index < 0 || index >= heap->cell_count)
         PANIC("Index out of range: %d", index);
 
     if (*text == 0)
         PANIC("The given atom text was empty");
 
-    heap[index].tag = TAG_ATOM;
+    heap->cells[index].tag = TAG_ATOM;
 
     char *text_location;
-    int found_it = try_find_atom(text, &text_location);
+    int found_it = try_find_atom(heap, text, &text_location);
 
     if (!found_it) {
         int space_needed = strlen(text) + 1;
-        if (atom_text_end - atom_text_next < space_needed)
+        char *atom_text_end = heap->atom_text_buf + heap->atom_buf_size;
+
+        if (atom_text_end - heap->atom_text_next < space_needed)
             PANIC("Ran out of space in the atom text buffer");
 
-        text_location = atom_text_next;
+        text_location = heap->atom_text_next;
         strcpy(text_location, text);
 
-        atom_text_next += space_needed;
+        heap->atom_text_next += space_needed;
     }
 
-    heap[index].car = text_location - atom_text_buf;
+    heap->cells[index].car = text_location - heap->atom_text_buf;
 }
 
-int try_find_atom(const char *text, char **result) {
-    char *cursor = atom_text_buf;
+int try_find_atom(heap_p heap, const char *text, char **result) {
+    char *cursor = heap->atom_text_buf;
 
     while (*cursor != 0) {
         if (strcmp(cursor, text) == 0) {
