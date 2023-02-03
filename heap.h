@@ -25,6 +25,15 @@ heap_p malloc_heap(size_t cell_count, size_t atom_buf_size);
 // Free a heap allocated with malloc_heap().
 void free_heap(heap_p heap);
 
+// Get the number of cells in the heap
+int cell_count(heap_p heap);
+// Allocate a new cell, or return -1 if none available
+//
+// If a cell is successfully allocated, then the newly allocated cell has a tag
+// of ATOM, a car of -1, and a reference count of 1. If no cells are available,
+// nothing happens and the function returns -1.
+int alloc_cell(heap_p heap);
+
 // Get the value of a field in a cell
 int getfield(heap_p heap, int field, int index);
 // Set the value of a field in a cell
@@ -45,6 +54,7 @@ void setatom(heap_p heap, int index, const char *text);
 #define FIELD_CAR 0
 #define FIELD_CDR 1
 #define FIELD_TAG 2
+#define FIELD_REFCOUNT 3
 
 #define TAG_UNINIT 0
 #define TAG_ATOM 1

@@ -39,6 +39,14 @@ void cmd_getatom(void);
 // Set the text of an atom
 void cmd_setatom(void);
 
+// Allocate a cell
+void cmd_alloc(void);
+
+// Print the number of cells in the heap
+void cmd_cellcount(void);
+// Re-initialize the heap
+void cmd_reinit(void);
+
 // Error messages:
 
 // Print "Unrecognized command: %s"
@@ -118,6 +126,12 @@ void process_command(void) {
         cmd_settag();
     else if (strcmp(command_name, "setatom") == 0)
         cmd_setatom();
+    else if (strcmp(command_name, "alloc") == 0)
+        cmd_alloc();
+    else if (strcmp(command_name, "cellcount") == 0)
+        cmd_cellcount();
+    else if (strcmp(command_name, "reinit") == 0)
+        cmd_reinit();
     else
         unknown_command(command_name);
 
@@ -134,7 +148,7 @@ void cmd_getfield(int field, const char *command_name) {
     if (!get_int_argument_strtok(command_name, &index)) return;
     if (!no_more_arguments_strtok(command_name)) return;
 
-    if (index < 0 || index >= HEAP_SIZE) {
+    if (index < 0 || index >= cell_count(heap)) {
         index_out_of_range(index);
         return;
     }
@@ -151,7 +165,7 @@ void cmd_setfield(int field, const char *command_name) {
     if (!get_int_argument_strtok(command_name, &value)) return;
     if (!no_more_arguments_strtok(command_name)) return;
 
-    if (index < 0 || index >= HEAP_SIZE) {
+    if (index < 0 || index >= cell_count(heap)) {
         index_out_of_range(index);
         return;
     }
@@ -166,7 +180,7 @@ void cmd_gettag() {
     if (!get_int_argument_strtok(command_name, &index)) return;
     if (!no_more_arguments_strtok(command_name)) return;
 
-    if (index < 0 || index >= HEAP_SIZE) {
+    if (index < 0 || index >= cell_count(heap)) {
         index_out_of_range(index);
         return;
     }
@@ -196,7 +210,7 @@ void cmd_settag() {
     if (!get_tagname_argument_strtok(command_name, &value)) return;
     if (!no_more_arguments_strtok(command_name)) return;
 
-    if (index < 0 || index >= HEAP_SIZE) {
+    if (index < 0 || index >= cell_count(heap)) {
         index_out_of_range(index);
         return;
     }
@@ -211,7 +225,7 @@ void cmd_getatom() {
     if (!get_int_argument_strtok(command_name, &index)) return;
     if (!no_more_arguments_strtok(command_name)) return;
 
-    if (index < 0 || index >= HEAP_SIZE) {
+    if (index < 0 || index >= cell_count(heap)) {
         index_out_of_range(index);
         return;
     }
@@ -235,12 +249,55 @@ void cmd_setatom() {
     if (!get_word_argument_strtok(command_name, &text)) return;
     if (!no_more_arguments_strtok(command_name)) return;
 
-    if (index < 0 || index >= HEAP_SIZE) {
+    if (index < 0 || index >= cell_count(heap)) {
         index_out_of_range(index);
         return;
     }
 
     setatom(heap, index, text);
+}
+
+
+
+void cmd_alloc() {
+    const char *command_name = "alloc";
+
+    if (!no_more_arguments_strtok(command_name)) return;
+
+    int index = alloc_cell(heap);
+
+    if (index < 0)
+        fprintf(stderr, "No free cells\n");
+
+    printf("%d\n", index);
+}
+
+
+
+void cmd_cellcount() {
+    const char *command_name = "cellcount";
+
+    if (!no_more_arguments_strtok(command_name)) return;
+
+    int result = cell_count(heap);
+
+    printf("%d\n", result);
+}
+
+void cmd_reinit() {
+    const char *command_name = "reinit";
+    int new_cell_count;
+
+    if (!get_int_argument_strtok(command_name, &new_cell_count)) return;
+    if (!no_more_arguments_strtok(command_name)) return;
+
+    if (new_cell_count <= 0) {
+        fprintf(stderr, "New cell count must be positive\n");
+        return;
+    }
+
+    free_heap(heap);
+    heap = malloc_heap(new_cell_count, ATOM_TEXT_SIZE);
 }
 
 

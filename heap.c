@@ -22,12 +22,14 @@ typedef struct cons_cell {
     int car;
     int cdr;
     int tag;
-    int refCount;
+    int ref_count;
 } cons_cell;
 
 typedef struct heap {
     cons_cell *cells;
     size_t cell_count;
+    int next_uninit;
+
     char *atom_text_buf;
     char *atom_text_next;
     char *atom_text_end;
@@ -44,6 +46,8 @@ heap_p malloc_heap(size_t cell_count, size_t atom_buf_size) {
         PANIC("Failed to allocate enough memory for the heap");
     new_heap->cell_count = cell_count;
 
+    new_heap->next_uninit = 0;
+
     new_heap->atom_text_buf = calloc(atom_buf_size, sizeof(char));
     if (!new_heap->atom_text_buf)
         PANIC("Failed to allocate enough memory for the heap");
@@ -59,6 +63,27 @@ void free_heap(heap_p heap) {
     free(heap);
 }
 
+
+
+int cell_count(heap_p heap) {
+    return heap->cell_count;
+}
+
+int alloc_cell(heap_p heap) {
+    int index = heap->next_uninit;
+
+    if (index >= heap->cell_count)
+        return -1;
+
+    heap->next_uninit++;
+
+    setfield(heap, FIELD_TAG, index, TAG_ATOM);
+    setfield(heap, FIELD_CAR, index, -1);
+    setfield(heap, FIELD_REFCOUNT, index, 1);
+
+    return index;
+}
+
 int getfield(heap_p heap, int field, int index) {
     if (index < 0 || index >= heap->cell_count) {
         PANIC("Index out of range: %d", index);
@@ -71,6 +96,8 @@ int getfield(heap_p heap, int field, int index) {
             return heap->cells[index].cdr;
         case FIELD_TAG:
             return heap->cells[index].tag;
+        case FIELD_REFCOUNT:
+            return heap->cells[index].ref_count;
         default:
             PANIC("Unrecognized field number: %d", field);
     }
@@ -90,6 +117,9 @@ void setfield(heap_p heap, int field, int index, int value) {
             return;
         case FIELD_TAG:
             heap->cells[index].tag = value;
+            return;
+        case FIELD_REFCOUNT:
+            heap->cells[index].ref_count = value;
             return;
         default:
             PANIC("Unrecognized field number: %d", field);

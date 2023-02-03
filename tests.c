@@ -22,6 +22,8 @@
 void test_heap(void);
 // Try out the functions that deal with atoms.
 void test_atoms(void);
+// Try out allocating cells.
+void test_allocate(void);
 
 
 
@@ -33,6 +35,7 @@ void test_atoms(void);
 int main(int argc, char **argv) {
     RUN_TEST(test_heap);
     RUN_TEST(test_atoms);
+    RUN_TEST(test_allocate);
     printf("Everything looks good.\n");
 }
 
@@ -87,4 +90,36 @@ void test_atoms() {
         PANIC("Unexpected result from getatom(1): expected \"ha\", got \"%s\"", atom);
 
     free_heap(heap);
+}
+
+#define EXPECT(type, expr, expected) do { \
+    type EXPECT_actual = (expr); \
+    if (EXPECT_actual != (expected)) { \
+        PANIC("Unexpected result from %s: expected %d, got %d", \
+            #expr, expected, EXPECT_actual); \
+    } \
+} while (0)
+
+void test_allocate() {
+    heap_p heap = malloc_heap(3, 1);
+
+    int indices[3];
+
+    for (int i = 0; i < 3; i++) {
+        int index = alloc_cell(heap);
+        indices[i] = index;
+
+        EXPECT(int, getfield(heap, FIELD_TAG, index), TAG_ATOM);
+        EXPECT(int, getfield(heap, FIELD_REFCOUNT, index), 1);
+        EXPECT(int, getfield(heap, FIELD_CAR, index), -1);
+
+        setfield(heap, FIELD_CAR, index, i + 100);
+    }
+
+    // Now it should be all out of cells, so the next allocation should fail.
+    EXPECT(int, alloc_cell(heap), -1);
+
+    for (int i = 0; i < 3; i++) {
+        EXPECT(int, getfield(heap, FIELD_CAR, indices[i]), i + 100);
+    }
 }
