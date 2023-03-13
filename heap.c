@@ -9,11 +9,13 @@
 // A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 
 // heap.h: The in-memory database ("heap") and functions for interacting with it
+// rawheap.h: Unchecked functions for modifying the heap
 
 #include <string.h>
 
 #include "heap.h"
 #include "panic.h"
+#include "rawheap.h"
 
 // Try to find an atom in the buffer; return 0 if it isn't there
 int try_find_atom(heap_p heap, const char *text, char **result);

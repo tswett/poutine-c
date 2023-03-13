@@ -14,6 +14,7 @@
 
 #include "heap.h"
 #include "panic.h"
+#include "rawheap.h"
 
 
 

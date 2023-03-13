@@ -15,6 +15,7 @@
 
 #include "heap.h"
 #include "panic.h"
+#include "rawheap.h"
 #include "rcheap.h"
 
 

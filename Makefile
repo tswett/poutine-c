@@ -9,7 +9,7 @@
 # A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 
 CC = gcc
-CFLAGS = -g -Wall -fdiagnostics-color=always
+CFLAGS = -g -Wall -Werror-implicit-function-declaration -fdiagnostics-color=always
 
 all: bin/poutine bin/test
 
@@ -32,4 +32,4 @@ bin/%.o: %.c *.h
 	$(CC) $(CFLAGS) -c -o $@ $<
 
 clean:
-	rm -f bin/poutine bin/test bin/heap.o bin/main.o bin/tests.o
+	rm -f bin/poutine bin/test bin/heap.o bin/main.o bin/rawheap.o bin/rcheap.o bin/tests.o

@@ -14,6 +14,7 @@
 
 #include "heap.h"
 #include "panic.h"
+#include "rawheap.h"
 #include "rcheap.h"
 
 int rc_getfield(heap_p heap, int field, int index) {
