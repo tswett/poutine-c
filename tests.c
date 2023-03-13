@@ -15,6 +15,7 @@
 
 #include "heap.h"
 #include "panic.h"
+#include "rcheap.h"
 
 
 
@@ -24,6 +25,8 @@ void test_heap(void);
 void test_atoms(void);
 // Try out allocating cells.
 void test_allocate(void);
+// Try out the reference-counting heap functions.
+void test_rcheap(void);
 
 
 
@@ -36,14 +39,15 @@ int main(int argc, char **argv) {
     RUN_TEST(test_heap);
     RUN_TEST(test_atoms);
     RUN_TEST(test_allocate);
+    RUN_TEST(test_rcheap);
     printf("Everything looks good.\n");
 }
 
-#define TEST_HEAP_EXPECT_FIELD(field, index, expected) do { \
-    int actual = getfield(heap, field, index); \
-    if (actual != expected) { \
-        PANIC("Unexpected result from getfield(%s, %d): expected %d, got %d", \
-            #field, index, expected, actual); \
+#define EXPECT(type, expr, expected) do { \
+    type EXPECT_actual = (expr); \
+    if (EXPECT_actual != (expected)) { \
+        PANIC("Unexpected result from %s: expected %d, got %d", \
+            #expr, expected, EXPECT_actual); \
     } \
 } while (0)
 
@@ -60,13 +64,13 @@ void test_heap() {
     setfield(heap, FIELD_CDR, 0, 58);
     setfield(heap, FIELD_TAG, 0, TAG_CONS);
 
-    TEST_HEAP_EXPECT_FIELD(FIELD_CAR, 0, 53);
-    TEST_HEAP_EXPECT_FIELD(FIELD_CDR, 0, 58);
-    TEST_HEAP_EXPECT_FIELD(FIELD_TAG, 0, TAG_CONS);
-    TEST_HEAP_EXPECT_FIELD(FIELD_CAR, 1, 59);
-    TEST_HEAP_EXPECT_FIELD(FIELD_CDR, 1, 26);
-    TEST_HEAP_EXPECT_FIELD(FIELD_TAG, 1, TAG_ATOM);
-    TEST_HEAP_EXPECT_FIELD(FIELD_TAG, 2, TAG_UNINIT);
+    EXPECT(int, getfield(heap, FIELD_CAR, 0), 53);
+    EXPECT(int, getfield(heap, FIELD_CDR, 0), 58);
+    EXPECT(int, getfield(heap, FIELD_TAG, 0), TAG_CONS);
+    EXPECT(int, getfield(heap, FIELD_CAR, 1), 59);
+    EXPECT(int, getfield(heap, FIELD_CDR, 1), 26);
+    EXPECT(int, getfield(heap, FIELD_TAG, 1), TAG_ATOM);
+    EXPECT(int, getfield(heap, FIELD_TAG, 2), TAG_UNINIT);
 
     free_heap(heap);
 }
@@ -77,13 +81,13 @@ void test_atoms() {
     setatom(heap, 0, "nil");
     setatom(heap, 1, "ha");
 
-    TEST_HEAP_EXPECT_FIELD(FIELD_TAG, 0, TAG_ATOM);
+    EXPECT(int, getfield(heap, FIELD_TAG, 0), TAG_ATOM);
     const char *atom = getatom(heap, 0);
 
     if (strcmp(atom, "nil") != 0)
         PANIC("Unexpected result from getatom(0): expected \"nil\", got \"%s\"", atom);
 
-    TEST_HEAP_EXPECT_FIELD(FIELD_TAG, 1, TAG_ATOM);
+    EXPECT(int, getfield(heap, FIELD_TAG, 1), TAG_ATOM);
     atom = getatom(heap, 1);
 
     if (strcmp(atom, "ha") != 0)
@@ -91,14 +95,6 @@ void test_atoms() {
 
     free_heap(heap);
 }
-
-#define EXPECT(type, expr, expected) do { \
-    type EXPECT_actual = (expr); \
-    if (EXPECT_actual != (expected)) { \
-        PANIC("Unexpected result from %s: expected %d, got %d", \
-            #expr, expected, EXPECT_actual); \
-    } \
-} while (0)
 
 void test_allocate() {
     heap_p heap = malloc_heap(3, 1);
@@ -122,4 +118,14 @@ void test_allocate() {
     for (int i = 0; i < 3; i++) {
         EXPECT(int, getfield(heap, FIELD_CAR, indices[i]), i + 100);
     }
+}
+
+void test_rcheap() {
+    heap_p heap = malloc_heap(10, 10);
+
+    EXPECT(int, rc_is_unowned(heap, 0), 1);
+
+    rc_setatom(heap, 0, "nil");
+
+    EXPECT(int, getfield(heap, FIELD_TAG, 0), TAG_ATOM);
 }

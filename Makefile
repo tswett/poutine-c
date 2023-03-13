@@ -23,9 +23,9 @@ bin/poutine: bin/heap.o bin/main.o
 	mkdir -p bin
 	$(CC) $(CFLAGS) -o bin/poutine bin/heap.o bin/main.o
 
-bin/test: bin/heap.o bin/tests.o
+bin/test: bin/heap.o bin/rcheap.o bin/tests.o
 	mkdir -p bin
-	$(CC) $(CFLAGS) -o bin/test bin/heap.o bin/tests.o
+	$(CC) $(CFLAGS) -o bin/test bin/heap.o bin/rcheap.o bin/tests.o
 
 bin/%.o: %.c *.h
 	mkdir -p bin
