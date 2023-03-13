@@ -126,6 +126,16 @@ void setfield(heap_p heap, int field, int index, int value) {
     }
 }
 
+void inc_refcount(heap_p heap, int index) {
+    int refcount = getfield(heap, FIELD_REFCOUNT, index);
+    setfield(heap, FIELD_REFCOUNT, index, refcount + 1);
+}
+
+void dec_refcount(heap_p heap, int index) {
+    int refcount = getfield(heap, FIELD_REFCOUNT, index);
+    setfield(heap, FIELD_REFCOUNT, index, refcount - 1);
+}
+
 int isatom(heap_p heap, int index) {
     if (index < 0 || index >= heap->cell_count)
         PANIC("Index out of range: %d", index);

@@ -38,6 +38,10 @@ int alloc_cell(heap_p heap);
 int getfield(heap_p heap, int field, int index);
 // Set the value of a field in a cell
 void setfield(heap_p heap, int field, int index, int value);
+// Add 1 to the reference count of a cell
+void inc_refcount(heap_p heap, int index);
+// Subtract 1 from the reference count of a cell
+void dec_refcount(heap_p heap, int index);
 
 // Return 1 if this cell is a valid atom, 0 otherwise
 //

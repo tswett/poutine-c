@@ -121,11 +121,28 @@ void test_allocate() {
 }
 
 void test_rcheap() {
-    heap_p heap = malloc_heap(10, 10);
+    heap_p heap = malloc_heap(10, 20);
 
     EXPECT(int, rc_is_unowned(heap, 0), 1);
+    EXPECT(int, rc_is_valid(heap, 0), 0);
 
-    rc_setatom(heap, 0, "nil");
+    rc_setatom(heap, 1, "red");
+    rc_setatom(heap, 2, "nil");
 
-    EXPECT(int, getfield(heap, FIELD_TAG, 0), TAG_ATOM);
+    EXPECT(int, rc_getfield(heap, FIELD_TAG, 1), TAG_ATOM);
+    EXPECT(int, rc_is_unowned(heap, 1), 1);
+    EXPECT(int, rc_is_unowned(heap, 2), 1);
+
+    rc_setcons(heap, 3, 1, 2);
+
+    EXPECT(int, rc_getfield(heap, FIELD_TAG, 3), TAG_CONS);
+    EXPECT(int, rc_getfield(heap, FIELD_CAR, 3), 1);
+    EXPECT(int, rc_getfield(heap, FIELD_CDR, 3), 2);
+    EXPECT(int, rc_is_unowned(heap, 1), 0);
+    EXPECT(int, rc_is_unowned(heap, 2), 0);
+
+    rc_setatom(heap, 3, "orange");
+
+    EXPECT(int, rc_is_unowned(heap, 1), 1);
+    EXPECT(int, rc_is_unowned(heap, 2), 1);
 }
