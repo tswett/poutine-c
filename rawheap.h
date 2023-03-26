@@ -18,7 +18,7 @@
 // Allocate a new cell, or return -1 if none available
 //
 // If a cell is successfully allocated, then the newly allocated cell has a tag
-// of ATOM, a car of -1, and a reference count of 1. If no cells are available,
+// of ATOM, a car of -1, and a reference count of 0. If no cells are available,
 // nothing happens and the function returns -1.
 int alloc_cell(heap_p heap);
 

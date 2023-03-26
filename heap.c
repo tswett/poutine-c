@@ -81,7 +81,7 @@ int alloc_cell(heap_p heap) {
 
     setfield(heap, FIELD_TAG, index, TAG_ATOM);
     setfield(heap, FIELD_CAR, index, -1);
-    setfield(heap, FIELD_REFCOUNT, index, 1);
+    setfield(heap, FIELD_REFCOUNT, index, 0);
 
     return index;
 }

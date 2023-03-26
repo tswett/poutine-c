@@ -77,3 +77,12 @@ void rc_setcons(heap_p heap, int index, int car, int cdr) {
     inc_refcount(heap, car);
     inc_refcount(heap, cdr);
 }
+
+int rc_atom(heap_p heap, const char *text) {
+    int index = alloc_cell(heap);
+    
+    if (index != -1)
+        rc_setatom(heap, index, text);
+
+    return index;
+}

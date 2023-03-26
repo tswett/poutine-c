@@ -28,5 +28,7 @@ void rc_erase(heap_p heap, int index);
 void rc_setatom(heap_p heap, int index, const char *text);
 // Make a cell into a cons cell with the given car and cdr
 void rc_setcons(heap_p heap, int index, int car, int cdr);
+// Allocate a cell as an atom, returning -1 on insufficient space
+int rc_atom(heap_p heap, const char *text);
 
 #endif

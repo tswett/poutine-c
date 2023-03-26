@@ -14,6 +14,7 @@
 
 #include "heap.h"
 #include "panic.h"
+// TODO: remove all references to rawheap.h from main.c
 #include "rawheap.h"
 
 
