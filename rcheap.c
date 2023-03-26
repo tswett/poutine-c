@@ -22,8 +22,11 @@ int rc_getfield(heap_p heap, int field, int index) {
 }
 
 int rc_is_valid(heap_p heap, int index) {
+    if (index < 0 || index >= cell_count(heap))
+        return 0;
+
     int tag = getfield(heap, FIELD_TAG, index);
-    return tag == TAG_ATOM;
+    return tag == TAG_ATOM || tag == TAG_CONS;
 }
 
 int rc_is_unowned(heap_p heap, int index) {

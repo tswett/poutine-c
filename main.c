@@ -16,6 +16,7 @@
 #include "panic.h"
 // TODO: remove all references to rawheap.h from main.c
 #include "rawheap.h"
+#include "rcheap.h"
 
 
 
@@ -43,6 +44,12 @@ void cmd_setatom(void);
 
 // Allocate a cell
 void cmd_alloc(void);
+// Allocate a cell as an atom
+void cmd_atom(void);
+// Allocate a cell as a cons cell
+void cmd_cons(void);
+// Free a cell
+void cmd_free(void);
 
 // Print the number of cells in the heap
 void cmd_cellcount(void);
@@ -65,6 +72,10 @@ void index_out_of_range(int index);
 void unknown_tagname(const char *word);
 // Print "The cell at index %d is not a valid atom"
 void not_an_atom(int index);
+// Print "Invalid index: %d"
+void invalid_index(int index);
+// Print "The cell at index %d has references to it"
+void cell_has_references(int index);
 
 // Argument parsing using strtok:
 
@@ -130,6 +141,12 @@ void process_command(void) {
         cmd_setatom();
     else if (strcmp(command_name, "alloc") == 0)
         cmd_alloc();
+    else if (strcmp(command_name, "atom") == 0)
+        cmd_atom();
+    else if (strcmp(command_name, "cons") == 0)
+        cmd_cons();
+    else if (strcmp(command_name, "free") == 0)
+        cmd_free();
     else if (strcmp(command_name, "cellcount") == 0)
         cmd_cellcount();
     else if (strcmp(command_name, "reinit") == 0)
@@ -198,6 +215,9 @@ void cmd_gettag() {
             return;
         case TAG_CONS:
             printf("cons\n");
+            return;
+        case TAG_FREED:
+            printf("freed\n");
             return;
         default:
             PANIC("Unrecognized tag number: %d", result);
@@ -274,6 +294,68 @@ void cmd_alloc() {
     printf("%d\n", index);
 }
 
+void cmd_atom() {
+    const char *text;
+    const char *command_name = "atom";
+
+    if (!get_word_argument_strtok(command_name, &text)) return;
+    if (!no_more_arguments_strtok(command_name)) return;
+
+    int index = rc_atom(heap, text);
+
+    if (index < 0)
+        fprintf(stderr, "No free cells\n");
+
+    printf("%d\n", index);
+}
+
+void cmd_cons() {
+    int car;
+    int cdr;
+    const char *command_name = "cons";
+
+    if (!get_int_argument_strtok(command_name, &car)) return;
+    if (!get_int_argument_strtok(command_name, &cdr)) return;
+    if (!no_more_arguments_strtok(command_name)) return;
+
+    if (!rc_is_valid(heap, car)) {
+        invalid_index(car);
+        return;
+    }
+
+    if (!rc_is_valid(heap, cdr)) {
+        invalid_index(cdr);
+        return;
+    }
+
+    int index = rc_cons(heap, car, cdr);
+
+    if (index < 0)
+        fprintf(stderr, "No free cells\n");
+
+    printf("%d\n", index);
+}
+
+void cmd_free() {
+    int index;
+    const char *command_name = "free";
+
+    if (!get_int_argument_strtok(command_name, &index)) return;
+    if (!no_more_arguments_strtok(command_name)) return;
+
+    if (!rc_is_valid(heap, index)) {
+        invalid_index(index);
+        return;
+    }
+
+    if (!rc_is_unowned(heap, index)) {
+        cell_has_references(index);
+        return;
+    }
+
+    rc_free(heap, index);
+}
+
 
 
 void cmd_cellcount() {
@@ -327,11 +409,19 @@ void index_out_of_range(int index) {
 }
 
 void unknown_tagname(const char *word) {
-    fprintf(stderr,  "Unrecognized tag name: %s\n", word);
+    fprintf(stderr, "Unrecognized tag name: %s\n", word);
 }
 
 void not_an_atom(int index) {
     fprintf(stderr, "The cell at index %d is not a valid atom\n", index);
+}
+
+void invalid_index(int index) {
+    fprintf(stderr, "Invalid index: %d\n", index);
+}
+
+void cell_has_references(int index) {
+    fprintf(stderr,  "The cell at index %d has references to it\n", index);
 }
 
 
