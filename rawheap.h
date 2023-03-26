@@ -22,6 +22,9 @@
 // nothing happens and the function returns -1.
 int alloc_cell(heap_p heap);
 
+// Free the given cell
+void free_cell(heap_p heap, int index);
+
 // Set the value of a field in a cell
 void setfield(heap_p heap, int field, int index, int value);
 // Add 1 to the reference count of a cell

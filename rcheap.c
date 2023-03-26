@@ -46,7 +46,13 @@ void rc_erase(heap_p heap, int index) {
         dec_refcount(heap, cdr);
     }
 
-    setfield(heap, FIELD_TAG, index, TAG_UNINIT);
+    setfield(heap, FIELD_TAG, index, TAG_ATOM);
+    setfield(heap, FIELD_CAR, index, 0);
+}
+
+void rc_free(heap_p heap, int index) {
+    rc_erase(heap, index);
+    free_cell(heap, index);
 }
 
 void rc_setatom(heap_p heap, int index, const char *text) {
@@ -83,6 +89,15 @@ int rc_atom(heap_p heap, const char *text) {
     
     if (index != -1)
         rc_setatom(heap, index, text);
+
+    return index;
+}
+
+int rc_cons(heap_p heap, int car, int cdr) {
+    int index = alloc_cell(heap);
+
+    if (index != -1)
+        rc_setcons(heap, index, car, cdr);
 
     return index;
 }

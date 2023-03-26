@@ -30,6 +30,7 @@ typedef struct cons_cell {
 typedef struct heap {
     cons_cell *cells;
     size_t cell_count;
+    int next_freed;
     int next_uninit;
 
     char *atom_text_buf;
@@ -47,6 +48,8 @@ heap_p malloc_heap(size_t cell_count, size_t atom_buf_size) {
     if (!new_heap->cells)
         PANIC("Failed to allocate enough memory for the heap");
     new_heap->cell_count = cell_count;
+
+    new_heap->next_freed = -1;
 
     new_heap->next_uninit = 0;
 
@@ -72,18 +75,40 @@ int cell_count(heap_p heap) {
 }
 
 int alloc_cell(heap_p heap) {
-    int index = heap->next_uninit;
+    int index;
 
-    if (index >= heap->cell_count)
-        return -1;
+    if (heap->next_freed != -1) {
+        index = heap->next_freed;
+        // pop this off the freed stack
+        heap->next_freed = getfield(heap, FIELD_CAR, heap->next_freed);
+    } else {
+        index = heap->next_uninit;
 
-    heap->next_uninit++;
+        if (index >= heap->cell_count)
+            return -1;
+
+        heap->next_uninit++;
+    }
 
     setfield(heap, FIELD_TAG, index, TAG_ATOM);
     setfield(heap, FIELD_CAR, index, -1);
     setfield(heap, FIELD_REFCOUNT, index, 0);
 
     return index;
+}
+
+void free_cell(heap_p heap, int index) {
+    int tag = getfield(heap, FIELD_TAG, index);
+    if (tag == TAG_UNINIT)
+        PANIC("tried to free an uninitialized cell");
+    if (tag == TAG_FREED)
+        PANIC("tried to free a freed cell");
+
+    // push this onto the freed stack
+    setfield(heap, FIELD_TAG, index, TAG_FREED);
+    setfield(heap, FIELD_CAR, index, heap->next_freed);
+
+    heap->next_freed = index;
 }
 
 int getfield(heap_p heap, int field, int index) {

@@ -125,6 +125,33 @@ void test_allocate() {
         EXPECT(int, getfield(heap, FIELD_CAR, indices[i]), i + 100);
     }
 
+    int test_indices[3] = {1, 2, 0};
+
+    for (int i = 0; i < 3; i++) {
+        // If memory is full, then we free a cell and allocate a cell, we should
+        // get back the cell we just freed.
+        free_cell(heap, test_indices[i]);
+
+        EXPECT(int, getfield(heap, FIELD_TAG, test_indices[i]), TAG_FREED);
+
+        int index = alloc_cell(heap);
+
+        EXPECT(int, index, test_indices[i]);
+    }
+
+    for (int i = 0; i < 3; i++) {
+        free_cell(heap, i);
+    }
+
+    for (int i = 0; i < 3; i++) {
+        int index = alloc_cell(heap);
+        EXPECT(int, getfield(heap, FIELD_TAG, index), TAG_ATOM);
+    }
+
+    // Now it should be all out of cells again, so the next allocation should
+    // fail once more.
+    EXPECT(int, alloc_cell(heap), -1);
+
     free_heap(heap);
 }
 
@@ -175,6 +202,19 @@ void test_rcheap_alloc() {
     EXPECT_STR(getatom(heap, orange), "orange");
 
     EXPECT(int, yellow, -1);
+
+    rc_free(heap, orange);
+
+    int list1 = rc_cons(heap, red, nil);
+
+    // The heap is full again, so this next allocation should fail.
+    int list2 = rc_cons(heap, red, list1);
+
+    EXPECT(int, rc_getfield(heap, FIELD_TAG, list1), TAG_CONS);
+    EXPECT(int, rc_getfield(heap, FIELD_CAR, list1), red);
+    EXPECT(int, rc_getfield(heap, FIELD_CDR, list1), nil);
+
+    EXPECT(int, list2, -1);
 
     free_heap(heap);
 }

@@ -22,13 +22,17 @@ int rc_is_valid(heap_p heap, int index);
 // Check if a cell has zero incoming references
 int rc_is_unowned(heap_p heap, int index);
 
-// Erase a cell
+// Erase a cell, but leave it allocated
 void rc_erase(heap_p heap, int index);
+// Erase and free a cell
+void rc_free(heap_p heap, int index);
 // Make a cell into an atom and set its text
 void rc_setatom(heap_p heap, int index, const char *text);
 // Make a cell into a cons cell with the given car and cdr
 void rc_setcons(heap_p heap, int index, int car, int cdr);
 // Allocate a cell as an atom, returning -1 on insufficient space
 int rc_atom(heap_p heap, const char *text);
+// Allocate a cell as a cons cell, returning -1 on insufficient space
+int rc_cons(heap_p heap, int car, int cdr);
 
 #endif

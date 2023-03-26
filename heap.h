@@ -49,5 +49,6 @@ const char *getatom(heap_p heap, int index);
 #define TAG_UNINIT 0
 #define TAG_ATOM 1
 #define TAG_CONS 2
+#define TAG_FREED 3
 
 #endif
