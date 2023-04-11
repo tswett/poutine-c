@@ -10,6 +10,15 @@
 
 // rcheap.h: Heap functions that respect reference counts
 
+// This header file provides functions for manipulating cells in a way that
+// respects reference counts and allocations. Specifically, the reference count
+// of a cell must actually equal the number of references to it. A cell cannot
+// be used unless it is allocated, and the collection of all unallocated cells
+// is kept track of correctly.
+
+// In the future, there will be garbage collection: cells will automatically be
+// deallocated when there are no more references to them.
+
 #ifndef RCHEAP_H
 #define RCHEAP_H
 

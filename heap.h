@@ -10,6 +10,12 @@
 
 // heap.h: The in-memory database ("heap") and functions for interacting with it
 
+// This header file provides functions for creating and examining a heap. The
+// functions for actually manipulating a heap come in two "layers." The
+// innermost layer is rawheap.h, which allows direct access to any field of any
+// cell. The next layer up is rcheap.h, which only permits operations that
+// respect reference counts and allocation.
+
 #ifndef HEAP_H
 #define HEAP_H
 
