@@ -47,6 +47,12 @@ int isatom(heap_p heap, int index);
 // The result pointer remains valid until the heap is freed.
 const char *getatom(heap_p heap, int index);
 
+// Print the contents of the given cell to the given buffer with the given
+// length.
+//
+// Return 1 on success, 0 if the buffer is too short.
+int print_to_buffer(heap_p heap, int index, char *buffer, int length);
+
 #define FIELD_CAR 0
 #define FIELD_CDR 1
 #define FIELD_TAG 2

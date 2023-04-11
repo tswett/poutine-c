@@ -239,3 +239,21 @@ int try_find_atom(heap_p heap, const char *text, char **result) {
 
     return 0;
 }
+
+
+
+int print_to_buffer(heap_p heap, int index, char *buffer, int length) {
+    const char *atom = getatom(heap, index);
+    if (!atom)
+        PANIC("The value at index %d isn't an atom", index);
+
+    if (strcmp(atom, "nil") == 0)
+        atom = "()";
+
+    if (length >= strlen(atom) + 1) {
+        strncpy(buffer, atom, length);
+        return 1;
+    } else {
+        return 0;
+    }
+}

@@ -9,7 +9,7 @@
 # A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 
 CC = gcc
-CFLAGS = -g -Wall -Werror-implicit-function-declaration -fdiagnostics-color=always
+CFLAGS = -g -Wall -Werror=discarded-qualifiers -Werror=implicit-function-declaration -fdiagnostics-color=always
 
 all: bin/poutine bin/test
 
@@ -19,7 +19,7 @@ run: bin/poutine
 test: bin/test
 	bin/test
 
-bin/poutine: bin/heap.o bin/main.o
+bin/poutine: bin/heap.o bin/main.o bin/rcheap.o
 	mkdir -p bin
 	$(CC) $(CFLAGS) -o bin/poutine bin/heap.o bin/main.o bin/rcheap.o
 

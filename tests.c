@@ -30,6 +30,8 @@ void test_allocate(void);
 void test_rcheap(void);
 // Try out the allocating heap functions.
 void test_rcheap_alloc(void);
+// Try out the print function.
+void test_print(void);
 
 
 
@@ -44,6 +46,7 @@ int main(int argc, char **argv) {
     RUN_TEST(test_allocate);
     RUN_TEST(test_rcheap);
     RUN_TEST(test_rcheap_alloc);
+    RUN_TEST(test_print);
     printf("Everything looks good.\n");
 }
 
@@ -221,4 +224,35 @@ void test_rcheap_alloc() {
     EXPECT(int, list2, -1);
 
     free_heap(heap);
+}
+
+#define EXPECT_STR(expr, expected) do { \
+    const char *EXPECT_STR_actual = (expr); \
+    if (strcmp(EXPECT_STR_actual, (expected)) != 0) { \
+        PANIC("Unexpected result from string %s: expected \"%s\", got \"%s\"", \
+            #expr, (expected), EXPECT_STR_actual); \
+    } \
+} while (0)
+
+#define PRINT_BUFFER_SIZE 50
+
+#define EXPECT_PRINT(index, result) do { \
+    EXPECT(int, print_to_buffer(heap, (index), buffer, PRINT_BUFFER_SIZE), 1); \
+    EXPECT_STR(buffer, (result)); \
+    EXPECT(int, print_to_buffer(heap, (index), buffer, sizeof(result) - 1), 0); \
+    EXPECT(int, print_to_buffer(heap, (index), buffer, sizeof(result)), 1); \
+    EXPECT_STR(buffer, (result)); \
+} while (0)
+
+void test_print() {
+    heap_p heap = malloc_heap(10, 30);
+    char buffer[PRINT_BUFFER_SIZE];
+
+    int nil = rc_atom(heap, "nil");
+    int red = rc_atom(heap, "red");
+    int orange = rc_atom(heap, "orange");
+
+    EXPECT_PRINT(red, "red");
+    EXPECT_PRINT(orange, "orange");
+    EXPECT_PRINT(nil, "()");
 }
